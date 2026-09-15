@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "677849698868",
+    "project_id": "tickeflow-14570",
+    "storage_bucket": "tickeflow-14570.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677849698868:android:9073d851497196aff1b061",
+        "android_client_info": {
+          "package_name": "com.example.ticketflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh9vdsTaPz023X_zpc4M_q-gDoLPzkE08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
