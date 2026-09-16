@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'registerScreen.dart';
+import 'colors/appColors.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -7,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0B14),
+      backgroundColor: AppColors.bgColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -25,7 +26,7 @@ class WelcomeScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.primaryTextColor,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -49,8 +50,8 @@ class WelcomeScreen extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: AppColors.primaryTextColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -73,10 +74,10 @@ class WelcomeScreen extends StatelessWidget {
 
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFC4B5FD),
+                      foregroundColor: AppColors.surfaceColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(
-                        color: Color(0xFF4C1D95),
+                        color: AppColors.primaryColor,
                         width: 1.5,
                       ),
                       shape: RoundedRectangleBorder(
@@ -87,6 +88,7 @@ class WelcomeScreen extends StatelessWidget {
                       'Entrar na conta',
                       style: TextStyle(
                         fontSize: 16,
+                        color: AppColors.primaryTextColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
