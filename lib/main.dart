@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'screens/welcomeScreen.dart';
+import 'screens/colors/appColors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +25,17 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'TicketFlow',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7C3AED)),
         useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.bgColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryColor,
+          secondary: AppColors.secondaryColor,
+          surface: AppColors.surfaceColor,
+        ),
+        textTheme: ThemeData.light().textTheme.apply(
+          bodyColor: AppColors.primaryTextColor,
+          displayColor: AppColors.primaryTextColor,
+        ),
       ),
       home: const WelcomeScreen(),
     );

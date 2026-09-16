@@ -15,12 +15,42 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Spacer(),
+              const Spacer(flex: 2),
 
-              // --- SUPERIOR SECTION ---
               Column(
                 children: [
-                  const SizedBox(height: 16),
+                  Container(
+                    height: 110,
+                    width: 110,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColor,
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Image.asset(
+                        'assets/icon/lightLogo.png',
+                        height: 110,
+                        width: 110,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.confirmation_number_rounded,
+                            color: Colors.white,
+                            size: 48,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   const Text(
                     'TicketFlow',
                     style: TextStyle(
@@ -30,39 +60,57 @@ class WelcomeScreen extends StatelessWidget {
                       letterSpacing: 0.5,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Organize seus chamados com simplicidade.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: AppColors.secondaryTextColor,
+                    ),
+                  ),
                 ],
               ),
-              const Spacer(),
+              const Spacer(flex: 3),
 
-
-
-              //criar e entrar na conta
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColor,
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryColor,
-                      foregroundColor: AppColors.primaryTextColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
+                      ],
                     ),
-                    child: const Text(
-                      'Criar uma conta',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Criar uma conta',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -70,11 +118,9 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   OutlinedButton(
-                    onPressed: () {
-
-                    },
+                    onPressed: () {},
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.surfaceColor,
+                      foregroundColor: AppColors.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(
                         color: AppColors.primaryColor,
@@ -88,13 +134,14 @@ class WelcomeScreen extends StatelessWidget {
                       'Entrar na conta',
                       style: TextStyle(
                         fontSize: 16,
-                        color: AppColors.primaryTextColor,
+                        color: AppColors.primaryColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 50),
             ],
           ),
         ),

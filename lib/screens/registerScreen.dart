@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/authService.dart';
+import 'colors/appColors.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -8,6 +10,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final AuthService _authService = AuthService();
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -22,16 +26,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  InputDecoration _fieldDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: AppColors.hintTextColor),
+      filled: true,
+      fillColor: AppColors.inputFillColor,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.borderColor, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0B14),
+      backgroundColor: AppColors.bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFC4B5FD)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.primaryTextColor),
           onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Criar conta',
+          style: TextStyle(
+            color: AppColors.primaryTextColor,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       body: SafeArea(
@@ -42,31 +76,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 20),
-                // Título da Tela
-                const Text(
-                  'Criar uma conta',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                const SizedBox(height: 12),
+                Center(
+                  child: Container(
+                    height: 76,
+                    width: 76,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColor,
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/icon/lightLogo.png',
+                        height: 76,
+                        width: 76,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.confirmation_number_rounded,
+                            color: Colors.white,
+                            size: 36,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 const Text(
                   'Preencha os campos abaixo para começar.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFFA1A1AA),
+                    fontSize: 15,
+                    color: AppColors.secondaryTextColor,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 36),
 
-                // Campo de Nome
                 const Text(
                   'Nome completo',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.primaryTextColor,
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -74,34 +132,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Digite seu nome',
-                    hintStyle: const TextStyle(color: Color(0xFF71717A)),
-                    filled: true,
-                    fillColor: const Color(0xFF18181B),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF27272A), width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
-                    ),
-                  ),
+                  style: const TextStyle(color: AppColors.primaryTextColor),
+                  decoration: _fieldDecoration('Digite seu nome'),
                 ),
                 const SizedBox(height: 20),
 
-                // Campo de E-mail
                 const Text(
                   'E-mail',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.primaryTextColor,
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -109,35 +148,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _emailController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: AppColors.primaryTextColor),
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    hintText: 'seuemail@exemplo.com',
-                    hintStyle: const TextStyle(color: Color(0xFF71717A)),
-                    filled: true,
-                    fillColor: const Color(0xFF18181B),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF27272A), width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
-                    ),
-                  ),
+                  decoration: _fieldDecoration('seuemail@exemplo.com'),
                 ),
                 const SizedBox(height: 20),
 
-                // Campo de Senha
                 const Text(
                   'Senha',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.primaryTextColor,
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -146,17 +166,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: '••••••••',
-                    hintStyle: const TextStyle(color: Color(0xFF71717A)),
-                    filled: true,
-                    fillColor: const Color(0xFF18181B),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  style: const TextStyle(color: AppColors.primaryTextColor),
+                  decoration: _fieldDecoration('••••••••').copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        color: const Color(0xFFA1A1AA),
+                        color: AppColors.secondaryTextColor,
                       ),
                       onPressed: () {
                         setState(() {
@@ -164,41 +179,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         });
                       },
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF27272A), width: 1),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF7C3AED), width: 1.5),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                // Botão de Cadastrar
-                ElevatedButton(
-                  onPressed: () {
-                    // Lógica visual por enquanto
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadowColor,
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    'Cadastrar',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Lógica visual por enquanto
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Cadastrar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
