@@ -17,6 +17,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   @override
   void dispose() {
@@ -24,6 +27,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.userSignUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        _nameController.text.trim(),
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conta criada com sucesso!')),
+      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   InputDecoration _fieldDecoration(String hint) {
@@ -44,6 +77,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.errorColor, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.errorColor, width: 1.5),
       ),
     );
   }
@@ -121,6 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 36),
 
+                // Campo de Nome
                 const Text(
                   'Nome completo',
                   style: TextStyle(
@@ -133,10 +175,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _nameController,
                   style: const TextStyle(color: AppColors.primaryTextColor),
+                  textInputAction: TextInputAction.next,
                   decoration: _fieldDecoration('Digite seu nome'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe seu nome';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
 
+                // Campo de E-mail
                 const Text(
                   'E-mail',
                   style: TextStyle(
@@ -150,10 +200,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _emailController,
                   style: const TextStyle(color: AppColors.primaryTextColor),
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   decoration: _fieldDecoration('seuemail@exemplo.com'),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe seu e-mail';
+                    }
+                    if (!_emailRegex.hasMatch(value.trim())) {
+                      return 'E-mail inválido';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
 
+                // Campo de Senha
                 const Text(
                   'Senha',
                   style: TextStyle(
@@ -167,6 +228,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   style: const TextStyle(color: AppColors.primaryTextColor),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _register(),
                   decoration: _fieldDecoration('••••••••').copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -180,9 +243,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Informe uma senha';
+                    }
+                    if (value.length < 6) {
+                      return 'A senha precisa ter pelo menos 6 caracteres';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 40),
 
+                // Botão de Cadastrar
                 DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
@@ -195,19 +268,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ),
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Lógica visual por enquanto
-                    },
+                    onPressed: _isLoading ? null : _register,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryColor,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: AppColors.disabledColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                        : const Text(
                       'Cadastrar',
                       style: TextStyle(
                         fontSize: 16,
