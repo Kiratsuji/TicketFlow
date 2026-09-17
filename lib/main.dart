@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/welcomeScreen.dart';
+import 'screens/mainDashboard.dart';
 import 'screens/colors/appColors.dart';
 
 void main() async {
@@ -37,7 +39,20 @@ class MyApp extends StatelessWidget {
           displayColor: AppColors.primaryTextColor,
         ),
       ),
-      home: const WelcomeScreen(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snapshot.hasData && snapshot.data != null) {
+            return const MainDashboard();
+          }
+          return const WelcomeScreen();
+        },
+      ),
     );
   }
 }

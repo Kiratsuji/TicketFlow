@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'registerScreen.dart';
+import 'loginScreen.dart';
 import 'colors/appColors.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -118,7 +119,14 @@ class WelcomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
