@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import '../models/userModel.dart';
 
 class AuthService {
+  static const String defaultPassword = 'Ticket@123';
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -24,7 +27,7 @@ class AuthService {
           'uid': user.uid,
           'username': username,
           'email': email,
-          'role': 'admin',
+          'role': UserRole.admin,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
@@ -44,10 +47,51 @@ class AuthService {
         email: email,
         password: password,
       );
-
       return result.user;
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapAuthError(e));
+    }
+  }
+
+  Future<void> createUserByAdmin({
+    required String username,
+    required String email,
+    required String role,
+  }) async {
+    FirebaseApp? secondaryApp;
+    try {
+      secondaryApp = await Firebase.initializeApp(
+        name: 'secondary-${DateTime.now().millisecondsSinceEpoch}',
+        options: Firebase.app().options,
+      );
+      final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+
+      final cred = await secondaryAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: defaultPassword,
+      );
+      final newUser = cred.user!;
+
+      try {
+        await newUser.updateDisplayName(username);
+        await _db.collection('Users').doc(newUser.uid).set({
+          'uid': newUser.uid,
+          'username': username,
+          'email': email,
+          'role': role,
+          'mustChangePassword': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } on FirebaseException catch (e) {
+        await newUser.delete();
+        throw Exception('Não foi possível salvar os dados: ${e.message}');
+      }
+
+      await secondaryAuth.signOut();
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_mapAuthError(e));
+    } finally {
+      await secondaryApp?.delete();
     }
   }
 

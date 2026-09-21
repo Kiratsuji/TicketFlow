@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import '../screens/colors/appColors.dart';
 
+class NavItem {
+  final String label;
+  final IconData icon;
+  const NavItem({required this.label, required this.icon});
+}
+
 class CustomNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
+  final List<NavItem> items;
 
   const CustomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    required this.items,
   });
 
   @override
@@ -33,30 +41,12 @@ class CustomNavBar extends StatelessWidget {
         unselectedItemColor: AppColors.secondaryTextColor,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        selectedLabelStyle:
+        const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_alt_rounded),
-            label: 'Usuários',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.confirmation_number_rounded),
-            label: 'Chamados',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_rounded),
-            label: 'Relatório',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Perfil',
-          ),
-        ],
+        items: items
+            .map((i) => BottomNavigationBarItem(icon: Icon(i.icon), label: i.label))
+            .toList(),
       ),
     );
   }
