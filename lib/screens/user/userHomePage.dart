@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ticketflow/screens/colors/appColors.dart';
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -22,18 +23,22 @@ class UserHomePage extends StatelessWidget {
             DashboardHeader(
                 username: username, roleLabel: UserRole.label(UserRole.user)),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CreateTicketPage()),
-                ),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Abrir novo chamado'),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primaryColor,
+                foregroundColor: Colors.white,
               ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateTicketPage()),
+              ),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Abrir novo chamado'),
             ),
+          ),
             const SizedBox(height: 24),
             const SectionTitle('Meus Chamados'),
             StreamBuilder<List<TicketModel>>(

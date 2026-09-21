@@ -24,7 +24,7 @@ class AppCard extends StatelessWidget {
       margin: margin,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.borderColor),
       ),
@@ -41,35 +41,57 @@ class DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initial = username.isEmpty ? '?' : username[0].toUpperCase();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: AppColors.primaryColor.withOpacity(0.1),
-              child: Text(initial,
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: AppColors.borderColor)
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: AppColors.primaryColor.withOpacity(0.1),
+                child: Text(
+                  initial,
                   style: const TextStyle(
-                      color: AppColors.primaryColor, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(username,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(roleLabel,
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    username,
                     style: const TextStyle(
-                        color: AppColors.secondaryTextColor, fontSize: 12)),
-              ],
-            ),
-          ],
-        ),
-        IconButton(
-          icon: const Icon(Icons.logout_rounded, color: AppColors.errorColor),
-          onPressed: () => FirebaseAuth.instance.signOut(),
-        ),
-      ],
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    roleLabel,
+                    style: const TextStyle(
+                      color: AppColors.secondaryTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppColors.errorColor),
+            onPressed: () => FirebaseAuth.instance.signOut(),
+          ),
+        ],
+      ),
     );
   }
 }
