@@ -106,39 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                Center(
-                  child: Container(
-                    height: 80,
-                    width: 80,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadowColor,
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(22),
-                      child: Image.asset(
-                        'assets/icon/lightLogo.png',
-                        height: 80,
-                        width: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.confirmation_number_rounded,
-                            color: Colors.white,
-                            size: 40,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
+                Image.asset('assets/icon/lightLogo.png', width: 300, height: 150,),
                 const SizedBox(height: 32),
                 const Text(
                   'Bem-vindo de volta!',

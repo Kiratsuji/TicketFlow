@@ -20,47 +20,7 @@ class WelcomeScreen extends StatelessWidget {
 
               Column(
                 children: [
-                  Container(
-                    height: 110,
-                    width: 110,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadowColor,
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Image.asset(
-                        'assets/icon/lightLogo.png',
-                        height: 110,
-                        width: 110,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(
-                            Icons.confirmation_number_rounded,
-                            color: Colors.white,
-                            size: 48,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'TicketFlow',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryTextColor,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
+                  Image.asset('assets/icon/lightLogo.png', width: 300, height: 150,),
                   const SizedBox(height: 8),
                   const Text(
                     'Organize seus chamados com simplicidade.',
