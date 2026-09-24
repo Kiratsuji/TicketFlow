@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../models/ticketModel.dart';
+import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
+import '../../services/userService.dart';
 import '../../widgets/appWidgets.dart';
 import '../colors/appColors.dart';
 
@@ -39,6 +42,8 @@ class OpenTicketsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -47,32 +52,43 @@ class OpenTicketsPage extends StatelessWidget {
           children: [
             const SectionTitle('Chamados abertos'),
             Expanded(
-              child: StreamBuilder<List<TicketModel>>(
-                stream: TicketService().streamOpen(),
-                builder: (context, snap) {
-                  if (snap.hasError) {
-                    return const EmptyState(message: 'Erro ao carregar chamados.');
-                  }
-                  if (!snap.hasData) {
+              child: FutureBuilder<AppUser?>(
+                future: UserService().getUser(uid),
+                builder: (context, userSnap) {
+                  if (!userSnap.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  final tickets = snap.data!;
-                  if (tickets.isEmpty) {
-                    return const EmptyState(
-                        message: 'Nenhum chamado aberto. Bom trabalho!',
-                        icon: Icons.celebration_outlined);
-                  }
-                  return ListView.builder(
-                    itemCount: tickets.length,
-                    itemBuilder: (_, i) => TicketCard(
-                      ticket: tickets[i],
-                      showAuthor: true,
-                      action: FilledButton.tonalIcon(
-                        onPressed: () => _resolve(context, tickets[i]),
-                        icon: const Icon(Icons.check_rounded, size: 18),
-                        label: const Text('Resolver'),
-                      ),
-                    ),
+                  final companyId = userSnap.data!.companyId;
+
+                  return StreamBuilder<List<TicketModel>>(
+                    stream: TicketService().streamOpen(companyId),
+                    builder: (context, snap) {
+                      if (snap.hasError) {
+                        return const EmptyState(
+                            message: 'Erro ao carregar chamados.');
+                      }
+                      if (!snap.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final tickets = snap.data!;
+                      if (tickets.isEmpty) {
+                        return const EmptyState(
+                            message: 'Nenhum chamado aberto. Bom trabalho!',
+                            icon: Icons.celebration_outlined);
+                      }
+                      return ListView.builder(
+                        itemCount: tickets.length,
+                        itemBuilder: (_, i) => TicketCard(
+                          ticket: tickets[i],
+                          showAuthor: true,
+                          action: FilledButton.tonalIcon(
+                            onPressed: () => _resolve(context, tickets[i]),
+                            icon: const Icon(Icons.check_rounded, size: 18),
+                            label: const Text('Resolver'),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../models/userModel.dart';
 import '../../services/userService.dart';
@@ -10,53 +11,64 @@ class UsersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Usuários',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CreateUserPage()),
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    return FutureBuilder(
+        future: UserService().getUser(uid),
+        builder: (context, userSnap){
+          if(!userSnap.hasData){
+            return const Center(child: CircularProgressIndicator());
+          }
+          final companyId = userSnap.data!.companyId;
+
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Usuários',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CreateUserPage()),
+                        ),
+                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                        label: const Text('Novo usuário'),
+                      ),
+                    ],
                   ),
-                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                  label: const Text('Novo usuário'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: StreamBuilder<List<AppUser>>(
-                stream: UserService().streamUsers(),
-                builder: (context, snap) {
-                  if (snap.hasError) {
-                    return const EmptyState(message: 'Erro ao carregar usuários.');
-                  }
-                  if (!snap.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final users = snap.data!;
-                  if (users.isEmpty) {
-                    return const EmptyState(message: 'Nenhum usuário cadastrado.');
-                  }
-                  return ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (_, i) => _UserTile(user: users[i]),
-                  );
-                },
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: StreamBuilder<List<AppUser>>(
+                      stream: UserService().streamUsers(companyId),
+                      builder: (context, snap) {
+                        if (snap.hasError) {
+                          return const EmptyState(message: 'Erro ao carregar usuários.');
+                        }
+                        if (!snap.hasData) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final users = snap.data!;
+                        if (users.isEmpty) {
+                          return const EmptyState(message: 'Nenhum usuário cadastrado.');
+                        }
+                        return ListView.builder(
+                          itemCount: users.length,
+                          itemBuilder: (_, i) => _UserTile(user: users[i]),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          );
+        });
   }
 }
 

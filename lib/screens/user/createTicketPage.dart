@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ticketflow/services/userService.dart';
 import '../../services/ticketService.dart';
 import '../colors/appColors.dart';
 
@@ -26,9 +28,14 @@ class _CreateTicketPageState extends State<CreateTicketPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
     try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final me = await UserService().getUser(uid);
+      final companyId = me?.companyId ?? uid;
+
       await TicketService().createTicket(
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
+        companyId: companyId,
       );
       if (!mounted) return;
       Navigator.pop(context);

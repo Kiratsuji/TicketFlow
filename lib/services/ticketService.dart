@@ -15,26 +15,34 @@ class TicketService {
     });
   }
 
-  Stream<List<TicketModel>> streamAll() => _stream(_col);
+  Stream<List<TicketModel>> streamAll(String companyId) =>
+      _stream(_col.where('companyId', isEqualTo: companyId));
 
-  Stream<List<TicketModel>> streamCreatedBy(String uid) =>
-      _stream(_col.where('createdBy', isEqualTo: uid));
+  Stream<List<TicketModel>> streamCreatedBy(String companyId, String uid) =>
+      _stream(_col
+          .where('companyId', isEqualTo: companyId)
+          .where('createdBy', isEqualTo: uid));
 
-  Stream<List<TicketModel>> streamResolvedBy(String uid) =>
-      _stream(_col.where('resolvedBy', isEqualTo: uid));
+  Stream<List<TicketModel>> streamResolvedBy(String companyId, String uid) =>
+      _stream(_col
+          .where('companyId', isEqualTo: companyId)
+          .where('resolvedBy', isEqualTo: uid));
 
-  Stream<List<TicketModel>> streamOpen() =>
-      _stream(_col.where('status', isEqualTo: TicketStatus.open));
+  Stream<List<TicketModel>> streamOpen(String companyId) => _stream(_col
+      .where('companyId', isEqualTo: companyId)
+      .where('status', isEqualTo: TicketStatus.open));
 
   Future<void> createTicket({
     required String title,
     required String description,
+    required String companyId,
   }) async {
     final user = FirebaseAuth.instance.currentUser!;
     await _col.add({
       'title': title,
       'description': description,
       'status': TicketStatus.open,
+      'companyId': companyId,
       'createdBy': user.uid,
       'createdByName': user.displayName ?? 'Usuário',
       'resolvedBy': null,

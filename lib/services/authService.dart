@@ -11,6 +11,18 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
 
+  /// Busca o documento Firestore do usuário logado (contém role e companyId).
+  Future<AppUser?> getCurrentAppUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    final doc = await _db.collection('Users').doc(user.uid).get();
+    if (!doc.exists) return null;
+    return AppUser.fromDoc(doc);
+  }
+
+  /// Cadastro público. Cada conta criada aqui é a fundadora de uma nova
+  /// empresa isolada: vira admin, mas só enxerga dados com companyId ==
+  /// o próprio uid. Não existe mais "admin global".
   Future<User?> userSignUp(String email, String password, String username) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -28,6 +40,7 @@ class AuthService {
           'username': username,
           'email': email,
           'role': UserRole.admin,
+          'companyId': user.uid, // esta conta é a dona da própria empresa
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
@@ -53,6 +66,9 @@ class AuthService {
     }
   }
 
+  /// Cadastro feito por um admin. O novo usuário herda o companyId do
+  /// admin que está cadastrando — ou seja, entra na mesma empresa dele,
+  /// nunca cria uma empresa nova.
   Future<void> createUserByAdmin({
     required String username,
     required String email,
@@ -60,6 +76,10 @@ class AuthService {
   }) async {
     FirebaseApp? secondaryApp;
     try {
+      final adminUid = _auth.currentUser!.uid;
+      final adminDoc = await _db.collection('Users').doc(adminUid).get();
+      final companyId = adminDoc.data()?['companyId'] ?? adminUid;
+
       secondaryApp = await Firebase.initializeApp(
         name: 'secondary-${DateTime.now().millisecondsSinceEpoch}',
         options: Firebase.app().options,
@@ -79,6 +99,7 @@ class AuthService {
           'username': username,
           'email': email,
           'role': role,
+          'companyId': companyId,
           'mustChangePassword': true,
           'createdAt': FieldValue.serverTimestamp(),
         });

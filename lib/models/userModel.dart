@@ -23,6 +23,7 @@ class AppUser {
   final String username;
   final String email;
   final String role;
+  final String companyId;
   final DateTime? createdAt;
 
   const AppUser({
@@ -30,6 +31,7 @@ class AppUser {
     required this.username,
     required this.email,
     required this.role,
+    required this.companyId,
     this.createdAt,
   });
 
@@ -40,6 +42,7 @@ class AppUser {
       username: d['username'] ?? 'Sem nome',
       email: d['email'] ?? '',
       role: d['role'] ?? UserRole.user,
+      companyId: d['companyId'] ?? doc.id,
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
     );
   }
