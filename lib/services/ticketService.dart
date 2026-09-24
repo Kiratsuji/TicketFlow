@@ -32,24 +32,44 @@ class TicketService {
       .where('companyId', isEqualTo: companyId)
       .where('status', isEqualTo: TicketStatus.open));
 
+  /// Chamado único, em tempo real — usado na página de detalhes/timeline.
+  Stream<TicketModel?> streamTicket(String ticketId) {
+    return _col.doc(ticketId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return TicketModel.fromDoc(doc);
+    });
+  }
+
   Future<void> createTicket({
     required String title,
     required String description,
     required String companyId,
+    required String category,
+    required String urgency,
   }) async {
     final user = FirebaseAuth.instance.currentUser!;
+    final createdByName = user.displayName ?? 'Usuário';
     await _col.add({
       'title': title,
       'description': description,
       'status': TicketStatus.open,
+      'category': category,
+      'urgency': urgency,
       'companyId': companyId,
       'createdBy': user.uid,
-      'createdByName': user.displayName ?? 'Usuário',
+      'createdByName': createdByName,
       'assignedTo': null,
       'assignedToName': null,
       'resolvedBy': null,
       'createdAt': FieldValue.serverTimestamp(),
       'resolvedAt': null,
+      'history': [
+        TicketHistoryEntry(
+          status: TicketStatus.open,
+          byName: createdByName,
+          at: DateTime.now(),
+        ).toMap(),
+      ],
     });
   }
 
@@ -57,23 +77,39 @@ class TicketService {
   /// aparecer como o técnico responsável.
   Future<void> takeTicket(String ticketId) async {
     final user = FirebaseAuth.instance.currentUser!;
+    final byName = user.displayName ?? 'Técnico';
     await _col.doc(ticketId).update({
       'status': TicketStatus.inProgress,
       'assignedTo': user.uid,
-      'assignedToName': user.displayName ?? 'Técnico',
+      'assignedToName': byName,
+      'history': FieldValue.arrayUnion([
+        TicketHistoryEntry(
+          status: TicketStatus.inProgress,
+          byName: byName,
+          at: DateTime.now(),
+        ).toMap(),
+      ]),
     });
   }
 
   Future<void> resolveTicket(String ticketId) async {
     final user = FirebaseAuth.instance.currentUser!;
+    final byName = user.displayName ?? 'Técnico';
     await _col.doc(ticketId).update({
       'status': TicketStatus.resolved,
       // Garante que o técnico responsável fique registrado mesmo que o
       // chamado seja resolvido sem passar por "em atendimento" antes.
       'assignedTo': user.uid,
-      'assignedToName': user.displayName ?? 'Técnico',
+      'assignedToName': byName,
       'resolvedBy': user.uid,
       'resolvedAt': FieldValue.serverTimestamp(),
+      'history': FieldValue.arrayUnion([
+        TicketHistoryEntry(
+          status: TicketStatus.resolved,
+          byName: byName,
+          at: DateTime.now(),
+        ).toMap(),
+      ]),
     });
   }
 }

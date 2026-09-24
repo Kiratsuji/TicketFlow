@@ -7,6 +7,7 @@ import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
 import '../../widgets/appWidgets.dart';
 import 'createTicketPage.dart';
+import 'ticketDetailPage.dart';
 
 class UserHomePage extends StatelessWidget {
   final String username;
@@ -113,8 +114,16 @@ class UserHomePage extends StatelessWidget {
                             const EmptyState(
                                 message: 'Você ainda não abriu nenhum chamado.')
                           else
-                            ...tickets
-                                .map((t) => TicketSummaryRow(ticket: t)),
+                            ...tickets.map((t) => TicketSummaryRow(
+                              ticket: t,
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      TicketDetailPage(ticketId: t.id),
+                                ),
+                              ),
+                            )),
                         ],
                       );
                     },
