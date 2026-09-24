@@ -9,6 +9,9 @@ String formatDate(DateTime? d) {
   return '${two(d.day)}/${two(d.month)}/${d.year} ${two(d.hour)}:${two(d.minute)}';
 }
 
+String shortTicketId(String id) =>
+    '#${(id.length > 6 ? id.substring(0, 6) : id).toUpperCase()}';
+
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets margin;
@@ -45,9 +48,9 @@ class DashboardHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: AppColors.borderColor)
+          color: AppColors.surfaceColor,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: AppColors.borderColor)
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -141,15 +144,26 @@ class StatCard extends StatelessWidget {
   }
 }
 
+// Cor de cada status, centralizada aqui para StatusBadge e StatCard
+// poderem usar a mesma paleta.
+Color statusColor(String status) {
+  switch (status) {
+    case TicketStatus.resolved:
+      return AppColors.successColor;
+    case TicketStatus.inProgress:
+      return Colors.orange;
+    default:
+      return AppColors.primaryColor;
+  }
+}
+
 class StatusBadge extends StatelessWidget {
   final String status;
   const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
-    final color = status == TicketStatus.resolved
-        ? AppColors.successColor
-        : AppColors.primaryColor;
+    final color = statusColor(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -210,6 +224,71 @@ class TicketCard extends StatelessWidget {
             const SizedBox(height: 12),
             Align(alignment: Alignment.centerRight, child: action!),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Card em formato de "linha de tabela": id, título, técnico responsável,
+/// data de abertura e status — usado na lista de chamados da dashboard
+/// do usuário padrão.
+class TicketSummaryRow extends StatelessWidget {
+  final TicketModel ticket;
+  const TicketSummaryRow({super.key, required this.ticket});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                shortTicketId(ticket.id),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondaryTextColor),
+              ),
+              StatusBadge(status: ticket.status),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            ticket.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.build_outlined,
+                  size: 14, color: AppColors.secondaryTextColor),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  ticket.assignedToName ?? 'Aguardando técnico',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 12, color: AppColors.secondaryTextColor),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.calendar_today_outlined,
+                  size: 12, color: AppColors.secondaryTextColor),
+              const SizedBox(width: 4),
+              Text(
+                formatDate(ticket.createdAt),
+                style: const TextStyle(
+                    fontSize: 11, color: AppColors.secondaryTextColor),
+              ),
+            ],
+          ),
         ],
       ),
     );

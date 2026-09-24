@@ -18,8 +18,8 @@ class UserHomePage extends StatelessWidget {
 
     return FutureBuilder(
         future: UserService().getUser(uid),
-        builder: (context, userSnap){
-          if(!userSnap.hasData){
+        builder: (context, userSnap) {
+          if (!userSnap.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
           final companyId = userSnap.data!.companyId;
@@ -31,7 +31,8 @@ class UserHomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DashboardHeader(
-                      username: username, roleLabel: UserRole.label(UserRole.user)),
+                      username: username,
+                      roleLabel: UserRole.label(UserRole.user)),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
@@ -43,19 +44,20 @@ class UserHomePage extends StatelessWidget {
                       ),
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CreateTicketPage()),
+                        MaterialPageRoute(
+                            builder: (_) => const CreateTicketPage()),
                       ),
                       icon: const Icon(Icons.add_rounded),
                       label: const Text('Abrir novo chamado'),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const SectionTitle('Meus Chamados'),
                   StreamBuilder<List<TicketModel>>(
                     stream: TicketService().streamCreatedBy(companyId, uid),
                     builder: (context, snap) {
                       if (snap.hasError) {
-                        return const EmptyState(message: 'Erro ao carregar chamados.');
+                        return const EmptyState(
+                            message: 'Erro ao carregar chamados.');
                       }
                       if (!snap.hasData) {
                         return const Padding(
@@ -64,12 +66,56 @@ class UserHomePage extends StatelessWidget {
                         );
                       }
                       final tickets = snap.data!;
-                      if (tickets.isEmpty) {
-                        return const EmptyState(
-                            message: 'Você ainda não abriu nenhum chamado.');
-                      }
+                      final openCount =
+                          tickets.where((t) => t.isOpen).length;
+                      final inProgressCount =
+                          tickets.where((t) => t.isInProgress).length;
+                      final resolvedCount =
+                          tickets.where((t) => t.isResolved).length;
+
                       return Column(
-                        children: tickets.map((t) => TicketCard(ticket: t)).toList(),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle('Meus Atendimentos'),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Abertos',
+                                  value: '$openCount',
+                                  subtitle: 'Aguardando',
+                                  icon: Icons.confirmation_number_outlined,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Em atendimento',
+                                  value: '$inProgressCount',
+                                  subtitle: 'Com técnico',
+                                  icon: Icons.build_outlined,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatCard(
+                                  title: 'Concluídos',
+                                  value: '$resolvedCount',
+                                  subtitle: 'Total',
+                                  icon: Icons.check_circle_outline,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          const SectionTitle('Meus Chamados'),
+                          if (tickets.isEmpty)
+                            const EmptyState(
+                                message: 'Você ainda não abriu nenhum chamado.')
+                          else
+                            ...tickets
+                                .map((t) => TicketSummaryRow(ticket: t)),
+                        ],
                       );
                     },
                   ),

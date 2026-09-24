@@ -45,9 +45,22 @@ class TicketService {
       'companyId': companyId,
       'createdBy': user.uid,
       'createdByName': user.displayName ?? 'Usuário',
+      'assignedTo': null,
+      'assignedToName': null,
       'resolvedBy': null,
       'createdAt': FieldValue.serverTimestamp(),
       'resolvedAt': null,
+    });
+  }
+
+  /// Técnico assume um chamado aberto: vira "em atendimento" e passa a
+  /// aparecer como o técnico responsável.
+  Future<void> takeTicket(String ticketId) async {
+    final user = FirebaseAuth.instance.currentUser!;
+    await _col.doc(ticketId).update({
+      'status': TicketStatus.inProgress,
+      'assignedTo': user.uid,
+      'assignedToName': user.displayName ?? 'Técnico',
     });
   }
 
@@ -55,6 +68,10 @@ class TicketService {
     final user = FirebaseAuth.instance.currentUser!;
     await _col.doc(ticketId).update({
       'status': TicketStatus.resolved,
+      // Garante que o técnico responsável fique registrado mesmo que o
+      // chamado seja resolvido sem passar por "em atendimento" antes.
+      'assignedTo': user.uid,
+      'assignedToName': user.displayName ?? 'Técnico',
       'resolvedBy': user.uid,
       'resolvedAt': FieldValue.serverTimestamp(),
     });
