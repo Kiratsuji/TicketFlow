@@ -59,7 +59,7 @@ class UsersPage extends StatelessWidget {
                         }
                         return ListView.builder(
                           itemCount: users.length,
-                          itemBuilder: (_, i) => _UserTile(user: users[i]),
+                          itemBuilder: (_, i) => UserTile(user: users[i]),
                         );
                       },
                     ),
@@ -72,9 +72,9 @@ class UsersPage extends StatelessWidget {
   }
 }
 
-class _UserTile extends StatelessWidget {
+class UserTile extends StatelessWidget {
   final AppUser user;
-  const _UserTile({required this.user});
+  const UserTile({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
