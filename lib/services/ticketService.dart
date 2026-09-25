@@ -32,20 +32,21 @@ class TicketService {
       .where('companyId', isEqualTo: companyId)
       .where('status', isEqualTo: TicketStatus.open));
 
-  /// Chamados assumidos por um técnico (em atendimento ou já resolvidos
-  /// por ele) — usado na dashboard do técnico.
   Stream<List<TicketModel>> streamAssignedTo(String companyId, String uid) =>
       _stream(_col
           .where('companyId', isEqualTo: companyId)
           .where('assignedTo', isEqualTo: uid));
 
-  /// Chamado único, em tempo real — usado na página de detalhes/timeline.
   Stream<TicketModel?> streamTicket(String ticketId) {
     return _col.doc(ticketId).snapshots().map((doc) {
       if (!doc.exists) return null;
       return TicketModel.fromDoc(doc);
     });
   }
+
+  Stream<List<TicketModel>> streamInProgress(String companyId) => _stream(_col
+      .where('companyId', isEqualTo: companyId)
+      .where('status', isEqualTo: TicketStatus.inProgress));
 
   Future<void> createTicket({
     required String title,
@@ -80,8 +81,6 @@ class TicketService {
     });
   }
 
-  /// Técnico assume um chamado aberto: vira "em atendimento" e passa a
-  /// aparecer como o técnico responsável.
   Future<void> takeTicket(String ticketId) async {
     final user = FirebaseAuth.instance.currentUser!;
     final byName = user.displayName ?? 'Técnico';
@@ -108,8 +107,6 @@ class TicketService {
     final byName = user.displayName ?? 'Técnico';
     await _col.doc(ticketId).update({
       'status': TicketStatus.resolved,
-      // Garante que o técnico responsável fique registrado mesmo que o
-      // chamado seja resolvido sem passar por "em atendimento" antes.
       'assignedTo': user.uid,
       'assignedToName': byName,
       'resolvedBy': user.uid,
@@ -120,6 +117,34 @@ class TicketService {
         TicketHistoryEntry(
           status: TicketStatus.resolved,
           byName: byName,
+          at: DateTime.now(),
+        ).toMap(),
+      ]),
+    });
+  }
+
+  Future<void> reassignTicket({
+    required String ticketId,
+    required String newTechUid,
+    required String newTechName,
+  }) async {
+    final admin = FirebaseAuth.instance.currentUser!;
+    final doc = await _col.doc(ticketId).get();
+    final data = doc.data();
+    final oldTechName = data?['assignedToName'] as String?;
+    final currentStatus =
+        (data?['status'] as String?) ?? TicketStatus.inProgress;
+
+    await _col.doc(ticketId).update({
+      'assignedTo': newTechUid,
+      'assignedToName': newTechName,
+      'history': FieldValue.arrayUnion([
+        TicketHistoryEntry(
+          status: currentStatus,
+          byName: admin.displayName ?? 'Admin',
+          note: oldTechName != null
+              ? 'Reatribuído de $oldTechName para $newTechName'
+              : 'Atribuído para $newTechName',
           at: DateTime.now(),
         ).toMap(),
       ]),

@@ -62,8 +62,6 @@ abstract class TicketUrgency {
   }
 }
 
-/// Dropdown auxiliar da tela de fechamento: classifica o motivo/tipo do
-/// encerramento, além da descrição livre da solução.
 abstract class TicketClosureReason {
   static const String resolved = 'resolved';
   static const String notReproduced = 'not_reproduced';
@@ -94,19 +92,24 @@ abstract class TicketClosureReason {
   }
 }
 
-/// Um registro de mudança no chamado (abertura, técnico assumiu, resolução...)
-/// usado para montar a timeline na página de detalhes.
 class TicketHistoryEntry {
   final String status;
   final String? byName;
+  final String? note;
   final DateTime? at;
 
-  const TicketHistoryEntry({required this.status, this.byName, this.at});
+  const TicketHistoryEntry({
+    required this.status,
+    this.byName,
+    this.note,
+    this.at,
+  });
 
   factory TicketHistoryEntry.fromMap(Map<String, dynamic> m) {
     return TicketHistoryEntry(
       status: m['status'] ?? '',
       byName: m['byName'],
+      note: m['note'],
       at: (m['at'] as Timestamp?)?.toDate(),
     );
   }
@@ -114,6 +117,7 @@ class TicketHistoryEntry {
   Map<String, dynamic> toMap() => {
     'status': status,
     'byName': byName,
+    'note': note,
     'at': Timestamp.fromDate(at ?? DateTime.now()),
   };
 }

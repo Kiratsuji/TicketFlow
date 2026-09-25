@@ -33,7 +33,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         future: _viewerFuture,
         builder: (context, viewerSnap) {
           final viewerRole = viewerSnap.data?.role;
-          // Só técnico e admin podem registrar a solução de um chamado.
           final canManage =
               viewerRole == UserRole.tech || viewerRole == UserRole.admin;
 
@@ -190,8 +189,6 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                       ),
                     ),
 
-                    // Botão fixo no rodapé, só para técnico/admin e apenas
-                    // enquanto o chamado ainda não foi concluído.
                     if (showCloseButton)
                       Container(
                         width: double.infinity,
@@ -257,8 +254,6 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-/// Um "degrau" da timeline: bolinha colorida + linha vertical ligando ao
-/// próximo evento, com o status, quem fez a mudança e quando.
 class _TimelineTile extends StatelessWidget {
   final TicketHistoryEntry event;
   final bool isLast;
@@ -305,6 +300,14 @@ class _TimelineTile extends StatelessWidget {
                     Text('por ${event.byName}',
                         style: const TextStyle(
                             fontSize: 12, color: AppColors.secondaryTextColor)),
+                  ],
+                  if (event.note != null && event.note!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(event.note!,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: AppColors.secondaryTextColor)),
                   ],
                   const SizedBox(height: 2),
                   Text(
