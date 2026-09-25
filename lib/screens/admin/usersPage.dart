@@ -89,105 +89,114 @@ class _UsersPageState extends State<UsersPage> {
         }
         final companyId = viewerSnap.data!.companyId;
 
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Usuários',
-                        style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    FilledButton.icon(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const CreateUserPage()),
+        // Material transparente: só existe para dar o ancestor que
+        // TextField/DropdownButtonFormField exigem. Não pinta nada, então
+        // funciona igual tanto quando esta tela é aberta como aba (dentro
+        // do Scaffold da navbar) quanto quando é empurrada como rota cheia
+        // (ex.: pelo botão "Ver Todos" da dashboard do admin).
+        return Material(
+          type: MaterialType.transparency,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Usuários',
+                          style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const CreateUserPage()),
+                        ),
+                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                        label: const Text('Novo usuário'),
                       ),
-                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                      label: const Text('Novo usuário'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
 
-                // Busca por nome.
-                TextField(
-                  controller: _searchController,
-                  onChanged: (v) => setState(() => _search = v),
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por nome...',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: AppColors.inputFillColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                  // Busca por nome.
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _search = v),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nome...',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      filled: true,
+                      fillColor: AppColors.inputFillColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Todos'),
-                      selected: _roleFilter == null,
-                      onSelected: (_) => setState(() => _roleFilter = null),
-                    ),
-                    ...UserRole.all.map((r) => ChoiceChip(
-                      label: Text(UserRole.label(r)),
-                      selected: _roleFilter == r,
-                      onSelected: (_) => setState(() => _roleFilter = r),
-                    )),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                  // Filtro por nível de acesso.
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Todos'),
+                        selected: _roleFilter == null,
+                        onSelected: (_) => setState(() => _roleFilter = null),
+                      ),
+                      ...UserRole.all.map((r) => ChoiceChip(
+                        label: Text(UserRole.label(r)),
+                        selected: _roleFilter == r,
+                        onSelected: (_) => setState(() => _roleFilter = r),
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
 
-                StreamBuilder<List<AppUser>>(
-                  stream: UserService().streamUsers(companyId),
-                  builder: (context, snap) {
-                    if (snap.hasError) {
-                      return const EmptyState(
-                          message: 'Erro ao carregar usuários.');
-                    }
-                    if (!snap.hasData) {
-                      return const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Center(child: CircularProgressIndicator()),
+                  StreamBuilder<List<AppUser>>(
+                    stream: UserService().streamUsers(companyId),
+                    builder: (context, snap) {
+                      if (snap.hasError) {
+                        return const EmptyState(
+                            message: 'Erro ao carregar usuários.');
+                      }
+                      if (!snap.hasData) {
+                        return const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final allUsers = snap.data!;
+                      final filtered = _applyFilters(allUsers);
+                      final techUsers =
+                      allUsers.where((u) => u.role == UserRole.tech).toList();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (filtered.isEmpty)
+                            const EmptyState(
+                                message: 'Nenhum usuário encontrado.')
+                          else
+                            ...filtered.map((u) => UserTile(
+                              user: u,
+                              isSelf: u.uid == _uid,
+                              onDelete: () => _confirmDelete(context, u),
+                            )),
+                          const SizedBox(height: 28),
+                          _ReassignSection(
+                            companyId: companyId,
+                            techUsers: techUsers,
+                          ),
+                        ],
                       );
-                    }
-                    final allUsers = snap.data!;
-                    final filtered = _applyFilters(allUsers);
-                    final techUsers =
-                    allUsers.where((u) => u.role == UserRole.tech).toList();
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (filtered.isEmpty)
-                          const EmptyState(
-                              message: 'Nenhum usuário encontrado.')
-                        else
-                          ...filtered.map((u) => UserTile(
-                            user: u,
-                            isSelf: u.uid == _uid,
-                            onDelete: () => _confirmDelete(context, u),
-                          )),
-                        const SizedBox(height: 28),
-                        _ReassignSection(
-                          companyId: companyId,
-                          techUsers: techUsers,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -281,6 +290,8 @@ class UserTile extends StatelessWidget {
   }
 }
 
+/// Seção fixa no final da tela de usuários: escolhe um chamado em
+/// atendimento e um novo técnico responsável para reatribuí-lo.
 class _ReassignSection extends StatefulWidget {
   final String companyId;
   final List<AppUser> techUsers;
@@ -363,6 +374,9 @@ class _ReassignSectionState extends State<_ReassignSection> {
                   );
                 }
 
+                // Se o chamado selecionado saiu da lista (ex.: foi
+                // concluído por outra pessoa), a seleção simplesmente some
+                // do dropdown em vez de quebrar o widget.
                 final currentTicketId =
                 tickets.any((t) => t.id == _ticketId) ? _ticketId : null;
                 final currentTechUid = widget.techUsers
