@@ -4,6 +4,7 @@ import '../models/userModel.dart';
 class UserService {
   final _col = FirebaseFirestore.instance.collection('Users');
 
+  /// Lista só os usuários da mesma empresa (mesmo companyId).
   Stream<List<AppUser>> streamUsers(String companyId) {
     return _col
         .where('companyId', isEqualTo: companyId)
@@ -20,5 +21,11 @@ class UserService {
     final doc = await _col.doc(uid).get();
     if (!doc.exists) return null;
     return AppUser.fromDoc(doc);
+  }
+
+  /// Atualiza o nome exibido do usuário no Firestore (o displayName do
+  /// FirebaseAuth é atualizado à parte, na própria tela de perfil).
+  Future<void> updateUsername(String uid, String username) {
+    return _col.doc(uid).update({'username': username});
   }
 }
