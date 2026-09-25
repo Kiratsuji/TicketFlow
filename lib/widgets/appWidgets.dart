@@ -155,12 +155,14 @@ class SectionTitle extends StatelessWidget {
 class StatCard extends StatelessWidget {
   final String title, value, subtitle;
   final IconData icon;
+  final Color? color;
   const StatCard({
     super.key,
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
+    this.color,
   });
 
   @override
@@ -170,7 +172,7 @@ class StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.primaryColor, size: 24),
+          Icon(icon, color: color ?? AppColors.primaryColor, size: 24),
           const SizedBox(height: 12),
           Text(value,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),

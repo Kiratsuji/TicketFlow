@@ -32,6 +32,13 @@ class TicketService {
       .where('companyId', isEqualTo: companyId)
       .where('status', isEqualTo: TicketStatus.open));
 
+  /// Chamados assumidos por um técnico (em atendimento ou já resolvidos
+  /// por ele) — usado na dashboard do técnico.
+  Stream<List<TicketModel>> streamAssignedTo(String companyId, String uid) =>
+      _stream(_col
+          .where('companyId', isEqualTo: companyId)
+          .where('assignedTo', isEqualTo: uid));
+
   /// Chamado único, em tempo real — usado na página de detalhes/timeline.
   Stream<TicketModel?> streamTicket(String ticketId) {
     return _col.doc(ticketId).snapshots().map((doc) {
