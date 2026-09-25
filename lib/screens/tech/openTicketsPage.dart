@@ -6,6 +6,7 @@ import '../../services/ticketService.dart';
 import '../../services/userService.dart';
 import '../../widgets/appWidgets.dart';
 import '../colors/appColors.dart';
+import '../user/closeTicketPage.dart';
 
 enum _QueueTab { fila, meus }
 
@@ -65,33 +66,10 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
   }
 
   Future<void> _resolve(BuildContext context, TicketModel ticket) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Resolver chamado'),
-        content: Text('Marcar "${ticket.title}" como resolvido?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Resolver')),
-        ],
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CloseTicketPage(ticket: ticket)),
     );
-    if (confirm != true) return;
-    try {
-      await TicketService().resolveTicket(ticket.id);
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.errorColor,
-          content: Text('Não foi possível resolver o chamado.'),
-        ),
-      );
-    }
   }
 
   List<TicketModel> _applyFilters(List<TicketModel> tickets) {
@@ -322,9 +300,10 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
                                   : FilledButton.tonalIcon(
                                 onPressed: () =>
                                     _resolve(context, ticket),
-                                icon: const Icon(Icons.check_rounded,
+                                icon: const Icon(
+                                    Icons.assignment_turned_in_outlined,
                                     size: 18),
-                                label: const Text('Resolver'),
+                                label: const Text('Registrar Solução'),
                               ),
                             );
                           },

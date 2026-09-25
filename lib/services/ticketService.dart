@@ -99,7 +99,11 @@ class TicketService {
     });
   }
 
-  Future<void> resolveTicket(String ticketId) async {
+  Future<void> resolveTicket(
+      String ticketId, {
+        required String solution,
+        required String closureReason,
+      }) async {
     final user = FirebaseAuth.instance.currentUser!;
     final byName = user.displayName ?? 'Técnico';
     await _col.doc(ticketId).update({
@@ -110,6 +114,8 @@ class TicketService {
       'assignedToName': byName,
       'resolvedBy': user.uid,
       'resolvedAt': FieldValue.serverTimestamp(),
+      'solution': solution,
+      'closureReason': closureReason,
       'history': FieldValue.arrayUnion([
         TicketHistoryEntry(
           status: TicketStatus.resolved,

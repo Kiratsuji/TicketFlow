@@ -62,6 +62,38 @@ abstract class TicketUrgency {
   }
 }
 
+/// Dropdown auxiliar da tela de fechamento: classifica o motivo/tipo do
+/// encerramento, além da descrição livre da solução.
+abstract class TicketClosureReason {
+  static const String resolved = 'resolved';
+  static const String notReproduced = 'not_reproduced';
+  static const String duplicate = 'duplicate';
+  static const String cancelled = 'cancelled';
+  static const String other = 'other';
+  static const List<String> all = [
+    resolved,
+    notReproduced,
+    duplicate,
+    cancelled,
+    other,
+  ];
+
+  static String label(String reason) {
+    switch (reason) {
+      case notReproduced:
+        return 'Não foi possível reproduzir';
+      case duplicate:
+        return 'Duplicado';
+      case cancelled:
+        return 'Cancelado pelo solicitante';
+      case other:
+        return 'Outro';
+      default:
+        return 'Resolvido';
+    }
+  }
+}
+
 /// Um registro de mudança no chamado (abertura, técnico assumiu, resolução...)
 /// usado para montar a timeline na página de detalhes.
 class TicketHistoryEntry {
@@ -98,6 +130,8 @@ class TicketModel {
   final String? assignedTo;
   final String? assignedToName;
   final String? resolvedBy;
+  final String? solution;
+  final String? closureReason;
   final DateTime? createdAt;
   final DateTime? resolvedAt;
   final List<TicketHistoryEntry> history;
@@ -114,6 +148,8 @@ class TicketModel {
     this.assignedTo,
     this.assignedToName,
     this.resolvedBy,
+    this.solution,
+    this.closureReason,
     this.createdAt,
     this.resolvedAt,
     this.history = const [],
@@ -138,6 +174,8 @@ class TicketModel {
       assignedTo: d['assignedTo'],
       assignedToName: d['assignedToName'],
       resolvedBy: d['resolvedBy'],
+      solution: d['solution'],
+      closureReason: d['closureReason'],
       createdAt: (d['createdAt'] as Timestamp?)?.toDate(),
       resolvedAt: (d['resolvedAt'] as Timestamp?)?.toDate(),
       history: rawHistory
