@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../models/userModel.dart';
 import '../widgets/navbar.dart';
 import 'admin/adminHomePage.dart';
+import 'admin/reportsPage.dart';
 import 'admin/usersPage.dart';
 import 'pages/profilePage.dart';
-import 'pages/placeholderPage.dart';
 import 'tech/openTicketsPage.dart';
 import 'tech/techHomePage.dart';
 import 'user/userHomePage.dart';
@@ -33,11 +34,15 @@ class _MainDashboardState extends State<MainDashboard> {
     if (user == null) return const _Loading();
 
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('Users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('Users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (context, snap) {
         if (snap.hasError) {
           return const Scaffold(
-              body: Center(child: Text('Erro ao carregar seus dados.')));
+            body: Center(child: Text('Erro ao carregar seus dados.')),
+          );
         }
         if (!snap.hasData || !snap.data!.exists) return const _Loading();
 
@@ -83,11 +88,11 @@ class _MainDashboardState extends State<MainDashboard> {
           ),
           const _DashboardTab(
             NavItem(label: 'Chamados', icon: Icons.confirmation_number_rounded),
-            PlaceholderPage(title: 'Todos os chamados'),
+            OpenTicketsPage(),
           ),
           const _DashboardTab(
             NavItem(label: 'Relatório', icon: Icons.bar_chart_rounded),
-            PlaceholderPage(title: 'Relatórios'),
+            ReportsPage(),
           ),
           profile,
         ];

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -7,6 +8,7 @@ import '../../services/userService.dart';
 import '../../widgets/appWidgets.dart';
 import '../colors/appColors.dart';
 import '../tech/openTicketsPage.dart';
+import '../user/ticketDetailPage.dart';
 import 'usersPage.dart';
 
 class AdminHomePage extends StatelessWidget {
@@ -17,12 +19,16 @@ class AdminHomePage extends StatelessWidget {
   /// ainda não há nenhum chamado resolvido para calcular a média.
   String _averageResolutionLabel(List<TicketModel> tickets) {
     final resolved = tickets
-        .where((t) => t.isResolved && t.createdAt != null && t.resolvedAt != null)
+        .where(
+          (t) => t.isResolved && t.createdAt != null && t.resolvedAt != null,
+        )
         .toList();
     if (resolved.isEmpty) return '—';
 
     final totalMinutes = resolved.fold<int>(
-        0, (sum, t) => sum + t.resolvedAt!.difference(t.createdAt!).inMinutes);
+      0,
+      (sum, t) => sum + t.resolvedAt!.difference(t.createdAt!).inMinutes,
+    );
     final avgHours = (totalMinutes / resolved.length) / 60;
     return avgHours < 24
         ? '${avgHours.toStringAsFixed(1)}h'
@@ -49,14 +55,19 @@ class AdminHomePage extends StatelessWidget {
               final now = DateTime.now();
 
               final openedThisMonth = tickets
-                  .where((t) =>
-              t.createdAt != null &&
-                  t.createdAt!.year == now.year &&
-                  t.createdAt!.month == now.month)
+                  .where(
+                    (t) =>
+                        t.createdAt != null &&
+                        t.createdAt!.year == now.year &&
+                        t.createdAt!.month == now.month,
+                  )
                   .length;
               final waiting = tickets.where((t) => t.isOpen).length;
               final inProgress = tickets.where((t) => t.isInProgress).length;
-              final recentOpen = tickets.where((t) => t.isOpen).take(3).toList();
+              final recentOpen = tickets
+                  .where((t) => t.isOpen)
+                  .take(3)
+                  .toList();
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -64,8 +75,9 @@ class AdminHomePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DashboardHeader(
-                        username: username,
-                        roleLabel: UserRole.label(UserRole.admin)),
+                      username: username,
+                      roleLabel: UserRole.label(UserRole.admin),
+                    ),
                     const SizedBox(height: 24),
 
                     // Indicadores da empresa.
@@ -123,7 +135,9 @@ class AdminHomePage extends StatelessWidget {
                       title: 'Gestão de Usuários',
                       onSeeAll: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const UsersPage()),
+                        MaterialPageRoute(
+                          builder: (_) => const UsersPage(showAppBar: true),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -139,11 +153,13 @@ class AdminHomePage extends StatelessWidget {
                         final users = userListSnap.data!.take(4).toList();
                         if (users.isEmpty) {
                           return const EmptyState(
-                              message: 'Nenhum usuário cadastrado.');
+                            message: 'Nenhum usuário cadastrado.',
+                          );
                         }
                         return Column(
-                          children:
-                          users.map((u) => UserTile(user: u)).toList(),
+                          children: users
+                              .map((u) => UserTile(user: u))
+                              .toList(),
                         );
                       },
                     ),
@@ -155,15 +171,28 @@ class AdminHomePage extends StatelessWidget {
                       onSeeAll: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const OpenTicketsPage()),
+                          builder: (_) => const OpenTicketsPage(),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     if (recentOpen.isEmpty)
-                      const EmptyState(message: 'Nenhum chamado aberto no momento.')
+                      const EmptyState(
+                        message: 'Nenhum chamado aberto no momento.',
+                      )
                     else
-                      ...recentOpen
-                          .map((t) => TicketCard(ticket: t, showAuthor: true)),
+                      ...recentOpen.map(
+                        (t) => TicketCard(
+                          ticket: t,
+                          showAuthor: true,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TicketDetailPage(ticketId: t.id),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               );
@@ -185,12 +214,11 @@ class _SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        TextButton(
-          onPressed: onSeeAll,
-          child: const Text('Ver Todos'),
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
+        TextButton(onPressed: onSeeAll, child: const Text('Ver Todos')),
       ],
     );
   }

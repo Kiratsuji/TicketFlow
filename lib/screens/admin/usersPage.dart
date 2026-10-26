@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -9,7 +10,9 @@ import '../colors/appColors.dart';
 import 'createUserPage.dart';
 
 class UsersPage extends StatefulWidget {
-  const UsersPage({super.key});
+  final bool showAppBar;
+
+  const UsersPage({super.key, this.showAppBar = false});
 
   @override
   State<UsersPage> createState() => _UsersPageState();
@@ -33,7 +36,9 @@ class _UsersPageState extends State<UsersPage> {
     var list = users;
     final query = _search.trim().toLowerCase();
     if (query.isNotEmpty) {
-      list = list.where((u) => u.username.toLowerCase().contains(query)).toList();
+      list = list
+          .where((u) => u.username.toLowerCase().contains(query))
+          .toList();
     }
     if (_roleFilter != null) {
       list = list.where((u) => u.role == _roleFilter).toList();
@@ -48,17 +53,19 @@ class _UsersPageState extends State<UsersPage> {
         title: const Text('Excluir usuário'),
         content: Text(
           'Remover o acesso de "${user.username}" a este sistema?\n\n'
-              'Isso apaga o cadastro dele no app, mas não exclui a conta de '
-              'login por completo — isso exige um passo manual adicional, '
-              'fora do app.',
+          'Isso apaga o cadastro dele no app, mas não exclui a conta de '
+          'login por completo — isso exige um passo manual adicional, '
+          'fora do app.',
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
-            style:
-            FilledButton.styleFrom(backgroundColor: AppColors.errorColor),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.errorColor,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Excluir'),
           ),
@@ -81,22 +88,24 @@ class _UsersPageState extends State<UsersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<AppUser?>(
-      future: _viewerFuture,
-      builder: (context, viewerSnap) {
-        if (!viewerSnap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final companyId = viewerSnap.data!.companyId;
+    return Scaffold(
+      backgroundColor: AppColors.bgColor,
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text('Usuários'),
+              backgroundColor: AppColors.bgColor,
+              surfaceTintColor: Colors.transparent,
+            )
+          : null,
+      body: FutureBuilder<AppUser?>(
+        future: _viewerFuture,
+        builder: (context, viewerSnap) {
+          if (!viewerSnap.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final companyId = viewerSnap.data!.companyId;
 
-        // Material transparente: só existe para dar o ancestor que
-        // TextField/DropdownButtonFormField exigem. Não pinta nada, então
-        // funciona igual tanto quando esta tela é aberta como aba (dentro
-        // do Scaffold da navbar) quanto quando é empurrada como rota cheia
-        // (ex.: pelo botão "Ver Todos" da dashboard do admin).
-        return Material(
-          type: MaterialType.transparency,
-          child: SafeArea(
+          return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -105,15 +114,24 @@ class _UsersPageState extends State<UsersPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Usuários',
-                          style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      const Text(
+                        'Usuários',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       FilledButton.icon(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const CreateUserPage()),
+                          MaterialPageRoute(
+                            builder: (_) => const CreateUserPage(),
+                          ),
                         ),
-                        icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.person_add_alt_1_rounded,
+                          size: 18,
+                        ),
                         label: const Text('Novo usuário'),
                       ),
                     ],
@@ -147,11 +165,13 @@ class _UsersPageState extends State<UsersPage> {
                         selected: _roleFilter == null,
                         onSelected: (_) => setState(() => _roleFilter = null),
                       ),
-                      ...UserRole.all.map((r) => ChoiceChip(
-                        label: Text(UserRole.label(r)),
-                        selected: _roleFilter == r,
-                        onSelected: (_) => setState(() => _roleFilter = r),
-                      )),
+                      ...UserRole.all.map(
+                        (r) => ChoiceChip(
+                          label: Text(UserRole.label(r)),
+                          selected: _roleFilter == r,
+                          onSelected: (_) => setState(() => _roleFilter = r),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -161,7 +181,8 @@ class _UsersPageState extends State<UsersPage> {
                     builder: (context, snap) {
                       if (snap.hasError) {
                         return const EmptyState(
-                            message: 'Erro ao carregar usuários.');
+                          message: 'Erro ao carregar usuários.',
+                        );
                       }
                       if (!snap.hasData) {
                         return const Padding(
@@ -171,21 +192,25 @@ class _UsersPageState extends State<UsersPage> {
                       }
                       final allUsers = snap.data!;
                       final filtered = _applyFilters(allUsers);
-                      final techUsers =
-                      allUsers.where((u) => u.role == UserRole.tech).toList();
+                      final techUsers = allUsers
+                          .where((u) => u.role == UserRole.tech)
+                          .toList();
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (filtered.isEmpty)
                             const EmptyState(
-                                message: 'Nenhum usuário encontrado.')
+                              message: 'Nenhum usuário encontrado.',
+                            )
                           else
-                            ...filtered.map((u) => UserTile(
-                              user: u,
-                              isSelf: u.uid == _uid,
-                              onDelete: () => _confirmDelete(context, u),
-                            )),
+                            ...filtered.map(
+                              (u) => UserTile(
+                                user: u,
+                                isSelf: u.uid == _uid,
+                                onDelete: () => _confirmDelete(context, u),
+                              ),
+                            ),
                           const SizedBox(height: 28),
                           _ReassignSection(
                             companyId: companyId,
@@ -198,9 +223,9 @@ class _UsersPageState extends State<UsersPage> {
                 ],
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -224,19 +249,32 @@ class UserTile extends StatelessWidget {
           const CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.inputFillColor,
-            child: Icon(Icons.person, size: 18, color: AppColors.secondaryTextColor),
+            child: Icon(
+              Icons.person,
+              size: 18,
+              color: AppColors.secondaryTextColor,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(user.username,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text(user.email,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppColors.secondaryTextColor, fontSize: 11)),
+                Text(
+                  user.username,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  user.email,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.secondaryTextColor,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
@@ -247,16 +285,21 @@ class UserTile extends StatelessWidget {
               color: AppColors.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text(UserRole.label(user.role),
-                style: const TextStyle(
-                    color: AppColors.primaryColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              UserRole.label(user.role),
+              style: const TextStyle(
+                color: AppColors.primaryColor,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           if (onDelete != null)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded,
-                  color: AppColors.secondaryTextColor),
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: AppColors.secondaryTextColor,
+              ),
               onSelected: (v) {
                 if (v == 'delete') onDelete!();
               },
@@ -266,18 +309,21 @@ class UserTile extends StatelessWidget {
                   enabled: !isSelf,
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline_rounded,
-                          size: 18,
-                          color: isSelf
-                              ? AppColors.disabledColor
-                              : AppColors.errorColor),
+                      Icon(
+                        Icons.delete_outline_rounded,
+                        size: 18,
+                        color: isSelf
+                            ? AppColors.disabledColor
+                            : AppColors.errorColor,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         isSelf ? 'Você não pode se excluir' : 'Excluir usuário',
                         style: TextStyle(
-                            color: isSelf
-                                ? AppColors.disabledColor
-                                : AppColors.errorColor),
+                          color: isSelf
+                              ? AppColors.disabledColor
+                              : AppColors.errorColor,
+                        ),
                       ),
                     ],
                   ),
@@ -353,7 +399,8 @@ class _ReassignSectionState extends State<_ReassignSection> {
         const SectionTitle('Reatribuição de Chamados'),
         if (widget.techUsers.isEmpty)
           const EmptyState(
-              message: 'Cadastre um técnico para poder reatribuir chamados.')
+            message: 'Cadastre um técnico para poder reatribuir chamados.',
+          )
         else
           AppCard(
             child: StreamBuilder<List<TicketModel>>(
@@ -370,17 +417,20 @@ class _ReassignSectionState extends State<_ReassignSection> {
                   return const Text(
                     'Nenhum chamado em atendimento no momento.',
                     style: TextStyle(
-                        color: AppColors.secondaryTextColor, fontSize: 13),
+                      color: AppColors.secondaryTextColor,
+                      fontSize: 13,
+                    ),
                   );
                 }
 
                 // Se o chamado selecionado saiu da lista (ex.: foi
                 // concluído por outra pessoa), a seleção simplesmente some
                 // do dropdown em vez de quebrar o widget.
-                final currentTicketId =
-                tickets.any((t) => t.id == _ticketId) ? _ticketId : null;
-                final currentTechUid = widget.techUsers
-                    .any((t) => t.uid == _techUid)
+                final currentTicketId = tickets.any((t) => t.id == _ticketId)
+                    ? _ticketId
+                    : null;
+                final currentTechUid =
+                    widget.techUsers.any((t) => t.uid == _techUid)
                     ? _techUid
                     : null;
 
@@ -392,13 +442,15 @@ class _ReassignSectionState extends State<_ReassignSection> {
                       decoration: _decoration('Chamado'),
                       isExpanded: true,
                       items: tickets
-                          .map((t) => DropdownMenuItem(
-                        value: t.id,
-                        child: Text(
-                          '${shortTicketId(t.id)} • ${t.title}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ))
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t.id,
+                              child: Text(
+                                '${shortTicketId(t.id)} • ${t.title}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _ticketId = v),
                     ),
@@ -408,10 +460,12 @@ class _ReassignSectionState extends State<_ReassignSection> {
                       decoration: _decoration('Novo técnico responsável'),
                       isExpanded: true,
                       items: widget.techUsers
-                          .map((t) => DropdownMenuItem(
-                        value: t.uid,
-                        child: Text(t.username),
-                      ))
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t.uid,
+                              child: Text(t.username),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _techUid = v),
                     ),
@@ -420,22 +474,26 @@ class _ReassignSectionState extends State<_ReassignSection> {
                       width: double.infinity,
                       height: 48,
                       child: FilledButton(
-                        onPressed: (currentTicketId == null ||
-                            currentTechUid == null ||
-                            _isSaving)
+                        onPressed:
+                            (currentTicketId == null ||
+                                currentTechUid == null ||
+                                _isSaving)
                             ? null
                             : () => _reassign(
-                          currentTicketId,
-                          widget.techUsers
-                              .firstWhere((t) => t.uid == currentTechUid),
-                        ),
+                                currentTicketId,
+                                widget.techUsers.firstWhere(
+                                  (t) => t.uid == currentTechUid,
+                                ),
+                              ),
                         child: _isSaving
                             ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
-                        )
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
                             : const Text('Reatribuir'),
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../models/ticketModel.dart';
 import '../screens/colors/appColors.dart';
 
@@ -80,7 +81,11 @@ class AppCard extends StatelessWidget {
 class DashboardHeader extends StatelessWidget {
   final String username;
   final String roleLabel;
-  const DashboardHeader({super.key, required this.username, required this.roleLabel});
+  const DashboardHeader({
+    super.key,
+    required this.username,
+    required this.roleLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -89,9 +94,9 @@ class DashboardHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: AppColors.borderColor)
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: AppColors.borderColor),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,8 +152,10 @@ class SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
-    child: Text(text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+    child: Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+    ),
   );
 }
 
@@ -174,13 +181,21 @@ class StatCard extends StatelessWidget {
         children: [
           Icon(icon, color: color ?? AppColors.primaryColor, size: 24),
           const SizedBox(height: 12),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-          Text(title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-          Text(subtitle,
-              style: const TextStyle(
-                  color: AppColors.secondaryTextColor, fontSize: 10)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: AppColors.secondaryTextColor,
+              fontSize: 10,
+            ),
+          ),
         ],
       ),
     );
@@ -200,8 +215,14 @@ class StatusBadge extends StatelessWidget {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(TicketStatus.label(status),
-          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+      child: Text(
+        TicketStatus.label(status),
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
@@ -212,7 +233,12 @@ class InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color? color;
-  const InfoChip({super.key, required this.icon, required this.label, this.color});
+  const InfoChip({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -228,9 +254,14 @@ class InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: c),
           const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 12, color: c, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: c,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -241,11 +272,13 @@ class TicketCard extends StatelessWidget {
   final TicketModel ticket;
   final bool showAuthor;
   final Widget? action;
+  final VoidCallback? onTap;
   const TicketCard({
     super.key,
     required this.ticket,
     this.showAuthor = false,
     this.action,
+    this.onTap,
   });
 
   @override
@@ -253,39 +286,53 @@ class TicketCard extends StatelessWidget {
     final meta = showAuthor
         ? '${ticket.createdByName} • ${formatDate(ticket.createdAt)}'
         : formatDate(ticket.createdAt);
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(ticket.title,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    ticket.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
-              ),
-              const SizedBox(width: 12),
-              StatusBadge(status: ticket.status),
-            ],
-          ),
-          if (ticket.description.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(ticket.description,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                StatusBadge(status: ticket.status),
+              ],
+            ),
+            if (ticket.description.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                ticket.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13)),
-          ],
-          const SizedBox(height: 8),
-          Text(meta,
+                style: const TextStyle(fontSize: 13),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              meta,
               style: const TextStyle(
-                  color: AppColors.secondaryTextColor, fontSize: 11)),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            Align(alignment: Alignment.centerRight, child: action!),
+                color: AppColors.secondaryTextColor,
+                fontSize: 11,
+              ),
+            ),
+            if (action != null) ...[
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.centerRight, child: action!),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -314,9 +361,10 @@ class TicketSummaryRow extends StatelessWidget {
                 Text(
                   shortTicketId(ticket.id),
                   style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.secondaryTextColor),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondaryTextColor,
+                  ),
                 ),
                 StatusBadge(status: ticket.status),
               ],
@@ -331,8 +379,11 @@ class TicketSummaryRow extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.build_outlined,
-                    size: 14, color: AppColors.secondaryTextColor),
+                const Icon(
+                  Icons.build_outlined,
+                  size: 14,
+                  color: AppColors.secondaryTextColor,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -340,17 +391,24 @@ class TicketSummaryRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        fontSize: 12, color: AppColors.secondaryTextColor),
+                      fontSize: 12,
+                      color: AppColors.secondaryTextColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.calendar_today_outlined,
-                    size: 12, color: AppColors.secondaryTextColor),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 12,
+                  color: AppColors.secondaryTextColor,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   formatDate(ticket.createdAt),
                   style: const TextStyle(
-                      fontSize: 11, color: AppColors.secondaryTextColor),
+                    fontSize: 11,
+                    color: AppColors.secondaryTextColor,
+                  ),
                 ),
               ],
             ),
@@ -379,9 +437,11 @@ class EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 40, color: AppColors.disabledColor),
             const SizedBox(height: 8),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.secondaryTextColor)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.secondaryTextColor),
+            ),
           ],
         ),
       ),
