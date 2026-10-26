@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -7,11 +8,14 @@ import '../../services/userService.dart';
 import '../../widgets/appWidgets.dart';
 import '../colors/appColors.dart';
 import '../user/closeTicketPage.dart';
+import '../user/ticketDetailPage.dart';
 
-enum _QueueTab { fila, meus }
+enum TicketQueueTab { fila, meus, concluidos }
 
 class OpenTicketsPage extends StatefulWidget {
-  const OpenTicketsPage({super.key});
+  final TicketQueueTab initialTab;
+
+  const OpenTicketsPage({super.key, this.initialTab = TicketQueueTab.fila});
 
   @override
   State<OpenTicketsPage> createState() => _OpenTicketsPageState();
@@ -21,7 +25,7 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
   late final String _uid = FirebaseAuth.instance.currentUser!.uid;
   late final Future<AppUser?> _userFuture = UserService().getUser(_uid);
 
-  _QueueTab _tab = _QueueTab.fila;
+  late TicketQueueTab _tab = widget.initialTab;
 
   final _searchController = TextEditingController();
   String _search = '';
@@ -43,11 +47,13 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
         content: Text('Assumir "${ticket.title}" para você?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Assumir')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Assumir'),
+          ),
         ],
       ),
     );
@@ -77,9 +83,11 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
     final query = _search.trim().toLowerCase();
     if (query.isNotEmpty) {
       list = list
-          .where((t) =>
-      t.title.toLowerCase().contains(query) ||
-          t.description.toLowerCase().contains(query))
+          .where(
+            (t) =>
+                t.title.toLowerCase().contains(query) ||
+                t.description.toLowerCase().contains(query),
+          )
           .toList();
     }
     if (_categoryFilter != null) {
@@ -95,8 +103,7 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
     labelText: label,
     filled: true,
     fillColor: AppColors.inputFillColor,
-    contentPadding:
-    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: BorderSide.none,
@@ -111,8 +118,11 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
-        title: Text(
-            _tab == _QueueTab.fila ? 'Fila de Chamados' : 'Meus Atendimentos'),
+        title: Text(switch (_tab) {
+          TicketQueueTab.fila => 'Fila de Chamados',
+          TicketQueueTab.meus => 'Meus Atendimentos',
+          TicketQueueTab.concluidos => 'Concluídos',
+        }),
         backgroundColor: AppColors.bgColor,
         surfaceTintColor: Colors.transparent,
       ),
@@ -124,17 +134,22 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
             children: [
               // Alternância entre a fila geral e os chamados que o técnico
               // já assumiu.
-              SegmentedButton<_QueueTab>(
+              SegmentedButton<TicketQueueTab>(
                 segments: const [
                   ButtonSegment(
-                    value: _QueueTab.fila,
+                    value: TicketQueueTab.fila,
                     label: Text('Fila'),
                     icon: Icon(Icons.inbox_outlined),
                   ),
                   ButtonSegment(
-                    value: _QueueTab.meus,
+                    value: TicketQueueTab.meus,
                     label: Text('Meus Atendimentos'),
                     icon: Icon(Icons.build_outlined),
+                  ),
+                  ButtonSegment(
+                    value: TicketQueueTab.concluidos,
+                    label: Text('Concluídos'),
+                    icon: Icon(Icons.check_circle_outline),
                   ),
                 ],
                 selected: {_tab},
@@ -185,20 +200,26 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
                         decoration: _filterDecoration('Categoria'),
                         items: [
                           const DropdownMenuItem(
-                              value: null, child: Text('Todas')),
-                          ...TicketCategory.all.map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(categoryIcon(c),
+                            value: null,
+                            child: Text('Todas'),
+                          ),
+                          ...TicketCategory.all.map(
+                            (c) => DropdownMenuItem(
+                              value: c,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    categoryIcon(c),
                                     size: 16,
-                                    color: AppColors.primaryColor),
-                                const SizedBox(width: 6),
-                                Text(TicketCategory.label(c)),
-                              ],
+                                    color: AppColors.primaryColor,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(TicketCategory.label(c)),
+                                ],
+                              ),
                             ),
-                          )),
+                          ),
                         ],
                         onChanged: (v) => setState(() => _categoryFilter = v),
                       ),
@@ -210,16 +231,21 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
                         decoration: _filterDecoration('Prioridade'),
                         items: [
                           const DropdownMenuItem(
-                              value: null, child: Text('Todas')),
-                          ...TicketUrgency.all.map((u) => DropdownMenuItem(
-                            value: u,
-                            child: Text(
-                              TicketUrgency.label(u),
-                              style: TextStyle(
+                            value: null,
+                            child: Text('Todas'),
+                          ),
+                          ...TicketUrgency.all.map(
+                            (u) => DropdownMenuItem(
+                              value: u,
+                              child: Text(
+                                TicketUrgency.label(u),
+                                style: TextStyle(
                                   color: urgencyColor(u),
-                                  fontWeight: FontWeight.w600),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          )),
+                          ),
                         ],
                         onChanged: (v) => setState(() => _urgencyFilter = v),
                       ),
@@ -248,36 +274,54 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     final companyId = userSnap.data!.companyId;
-                    final stream = _tab == _QueueTab.fila
-                        ? TicketService().streamOpen(companyId)
-                        : TicketService().streamAssignedTo(companyId, _uid);
+                    final stream = switch (_tab) {
+                      TicketQueueTab.fila => TicketService().streamOpen(
+                        companyId,
+                      ),
+                      TicketQueueTab.meus => TicketService().streamAssignedTo(
+                        companyId,
+                        _uid,
+                      ),
+                      TicketQueueTab.concluidos =>
+                        TicketService().streamResolvedBy(companyId, _uid),
+                    };
 
                     return StreamBuilder<List<TicketModel>>(
                       stream: stream,
                       builder: (context, snap) {
                         if (snap.hasError) {
                           return const EmptyState(
-                              message: 'Erro ao carregar chamados.');
+                            message: 'Erro ao carregar chamados.',
+                          );
                         }
                         if (!snap.hasData) {
                           return const Center(
-                              child: CircularProgressIndicator());
+                            child: CircularProgressIndicator(),
+                          );
                         }
 
                         var tickets = snap.data!;
-                        if (_tab == _QueueTab.meus) {
-                          tickets =
-                              tickets.where((t) => t.isInProgress).toList();
+                        if (_tab == TicketQueueTab.meus) {
+                          tickets = tickets
+                              .where((t) => t.isInProgress)
+                              .toList();
                         }
                         tickets = _applyFilters(tickets);
 
                         if (tickets.isEmpty) {
                           return EmptyState(
-                            message: _tab == _QueueTab.fila
-                                ? 'Nenhum chamado na fila. Bom trabalho!'
-                                : 'Você não tem atendimentos em andamento.',
-                            icon: _tab == _QueueTab.fila
+                            message: switch (_tab) {
+                              TicketQueueTab.fila =>
+                                'Nenhum chamado na fila. Bom trabalho!',
+                              TicketQueueTab.meus =>
+                                'Você não tem atendimentos em andamento.',
+                              TicketQueueTab.concluidos =>
+                                'Você ainda não concluiu nenhum chamado.',
+                            },
+                            icon: _tab == TicketQueueTab.fila
                                 ? Icons.celebration_outlined
+                                : _tab == TicketQueueTab.concluidos
+                                ? Icons.check_circle_outline
                                 : Icons.inbox_outlined,
                           );
                         }
@@ -289,22 +333,36 @@ class _OpenTicketsPageState extends State<OpenTicketsPage> {
                             return TicketCard(
                               ticket: ticket,
                               showAuthor: true,
-                              action: _tab == _QueueTab.fila
+                              onTap: _tab == TicketQueueTab.concluidos
+                                  ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TicketDetailPage(
+                                          ticketId: ticket.id,
+                                        ),
+                                      ),
+                                    )
+                                  : null,
+                              action: _tab == TicketQueueTab.fila
                                   ? FilledButton.tonalIcon(
-                                onPressed: () => _take(context, ticket),
-                                icon: const Icon(
-                                    Icons.assignment_ind_outlined,
-                                    size: 18),
-                                label: const Text('Assumir'),
-                              )
-                                  : FilledButton.tonalIcon(
-                                onPressed: () =>
-                                    _resolve(context, ticket),
-                                icon: const Icon(
-                                    Icons.assignment_turned_in_outlined,
-                                    size: 18),
-                                label: const Text('Registrar Solução'),
-                              ),
+                                      onPressed: () => _take(context, ticket),
+                                      icon: const Icon(
+                                        Icons.assignment_ind_outlined,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Assumir'),
+                                    )
+                                  : _tab == TicketQueueTab.meus
+                                  ? FilledButton.tonalIcon(
+                                      onPressed: () =>
+                                          _resolve(context, ticket),
+                                      icon: const Icon(
+                                        Icons.assignment_turned_in_outlined,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Registrar Solução'),
+                                    )
+                                  : null,
                             );
                           },
                         );
