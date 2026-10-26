@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/ticketModel.dart';
 
 class TicketService {
@@ -9,8 +10,7 @@ class TicketService {
     return query.snapshots().map((snap) {
       final list = snap.docs.map(TicketModel.fromDoc).toList();
       final now = DateTime.now();
-      list.sort((a, b) =>
-          (b.createdAt ?? now).compareTo(a.createdAt ?? now));
+      list.sort((a, b) => (b.createdAt ?? now).compareTo(a.createdAt ?? now));
       return list;
     });
   }
@@ -19,23 +19,31 @@ class TicketService {
       _stream(_col.where('companyId', isEqualTo: companyId));
 
   Stream<List<TicketModel>> streamCreatedBy(String companyId, String uid) =>
-      _stream(_col
-          .where('companyId', isEqualTo: companyId)
-          .where('createdBy', isEqualTo: uid));
+      _stream(
+        _col
+            .where('companyId', isEqualTo: companyId)
+            .where('createdBy', isEqualTo: uid),
+      );
 
   Stream<List<TicketModel>> streamResolvedBy(String companyId, String uid) =>
-      _stream(_col
-          .where('companyId', isEqualTo: companyId)
-          .where('resolvedBy', isEqualTo: uid));
+      _stream(
+        _col
+            .where('companyId', isEqualTo: companyId)
+            .where('resolvedBy', isEqualTo: uid),
+      );
 
-  Stream<List<TicketModel>> streamOpen(String companyId) => _stream(_col
-      .where('companyId', isEqualTo: companyId)
-      .where('status', isEqualTo: TicketStatus.open));
+  Stream<List<TicketModel>> streamOpen(String companyId) => _stream(
+    _col
+        .where('companyId', isEqualTo: companyId)
+        .where('status', isEqualTo: TicketStatus.open),
+  );
 
   Stream<List<TicketModel>> streamAssignedTo(String companyId, String uid) =>
-      _stream(_col
-          .where('companyId', isEqualTo: companyId)
-          .where('assignedTo', isEqualTo: uid));
+      _stream(
+        _col
+            .where('companyId', isEqualTo: companyId)
+            .where('assignedTo', isEqualTo: uid),
+      );
 
   Stream<TicketModel?> streamTicket(String ticketId) {
     return _col.doc(ticketId).snapshots().map((doc) {
@@ -44,9 +52,30 @@ class TicketService {
     });
   }
 
-  Stream<List<TicketModel>> streamInProgress(String companyId) => _stream(_col
-      .where('companyId', isEqualTo: companyId)
-      .where('status', isEqualTo: TicketStatus.inProgress));
+  Future<void> updateTicketText({
+    required String ticketId,
+    required String title,
+    required String description,
+  }) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final doc = await _col.doc(ticketId).get();
+    final data = doc.data();
+
+    if (!doc.exists || data?['createdBy'] != uid) {
+      throw StateError('Somente o criador pode editar este chamado.');
+    }
+
+    await _col.doc(ticketId).update({
+      'title': title,
+      'description': description,
+    });
+  }
+
+  Stream<List<TicketModel>> streamInProgress(String companyId) => _stream(
+    _col
+        .where('companyId', isEqualTo: companyId)
+        .where('status', isEqualTo: TicketStatus.inProgress),
+  );
 
   Future<void> createTicket({
     required String title,
@@ -99,10 +128,10 @@ class TicketService {
   }
 
   Future<void> resolveTicket(
-      String ticketId, {
-        required String solution,
-        required String closureReason,
-      }) async {
+    String ticketId, {
+    required String solution,
+    required String closureReason,
+  }) async {
     final user = FirebaseAuth.instance.currentUser!;
     final byName = user.displayName ?? 'Técnico';
     await _col.doc(ticketId).update({

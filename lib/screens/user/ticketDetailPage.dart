@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -17,8 +18,89 @@ class TicketDetailPage extends StatefulWidget {
 }
 
 class _TicketDetailPageState extends State<TicketDetailPage> {
-  late final Future<AppUser?> _viewerFuture =
-  UserService().getUser(FirebaseAuth.instance.currentUser!.uid);
+  late final Future<AppUser?> _viewerFuture = UserService().getUser(
+    FirebaseAuth.instance.currentUser!.uid,
+  );
+
+  Future<void> _editTicket(BuildContext context, TicketModel ticket) async {
+    final titleController = TextEditingController(text: ticket.title);
+    final descriptionController = TextEditingController(
+      text: ticket.description,
+    );
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Editar chamado'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: 'Título'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Informe o título'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: descriptionController,
+                  maxLines: 5,
+                  decoration: const InputDecoration(labelText: 'Descrição'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Informe a descrição'
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              try {
+                await TicketService().updateTicketText(
+                  ticketId: ticket.id,
+                  title: titleController.text.trim(),
+                  description: descriptionController.text.trim(),
+                );
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext, true);
+                }
+              } catch (_) {
+                if (!dialogContext.mounted) return;
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: AppColors.errorColor,
+                    content: Text('Não foi possível editar o chamado.'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+
+    titleController.dispose();
+    descriptionController.dispose();
+
+    if (result == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Chamado atualizado com sucesso.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +115,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
         future: _viewerFuture,
         builder: (context, viewerSnap) {
           final viewerRole = viewerSnap.data?.role;
+          final viewerUid = FirebaseAuth.instance.currentUser?.uid;
           final canManage =
               viewerRole == UserRole.tech || viewerRole == UserRole.admin;
 
@@ -50,6 +133,10 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                 return const EmptyState(message: 'Chamado não encontrado.');
               }
 
+              final canEdit =
+                  viewerRole == UserRole.user &&
+                  viewerUid != null &&
+                  ticket.createdBy == viewerUid;
               final showCloseButton = canManage && !ticket.isResolved;
 
               return SafeArea(
@@ -68,8 +155,9 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                   child: Text(
                                     ticket.title,
                                     style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold),
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -88,7 +176,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                 InfoChip(
                                   icon: Icons.priority_high_rounded,
                                   label:
-                                  'Urgência: ${TicketUrgency.label(ticket.urgency)}',
+                                      'Urgência: ${TicketUrgency.label(ticket.urgency)}',
                                   color: urgencyColor(ticket.urgency),
                                 ),
                               ],
@@ -98,10 +186,13 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Descrição',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13)),
+                                  const Text(
+                                    'Descrição',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     ticket.description.isEmpty
@@ -119,14 +210,19 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                   children: [
                                     Row(
                                       children: [
-                                        Icon(Icons.task_alt_rounded,
-                                            size: 16,
-                                            color: AppColors.successColor),
+                                        Icon(
+                                          Icons.task_alt_rounded,
+                                          size: 16,
+                                          color: AppColors.successColor,
+                                        ),
                                         const SizedBox(width: 6),
-                                        const Text('Solução registrada',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13)),
+                                        const Text(
+                                          'Solução registrada',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
@@ -141,7 +237,8 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                       InfoChip(
                                         icon: Icons.label_outline_rounded,
                                         label: TicketClosureReason.label(
-                                            ticket.closureReason!),
+                                          ticket.closureReason!,
+                                        ),
                                         color: AppColors.successColor,
                                       ),
                                     ],
@@ -153,20 +250,24 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _DetailRow(
-                                      label: 'Aberto por',
-                                      value: ticket.createdByName),
+                                    label: 'Aberto por',
+                                    value: ticket.createdByName,
+                                  ),
                                   _DetailRow(
                                     label: 'Técnico responsável',
-                                    value: ticket.assignedToName ??
+                                    value:
+                                        ticket.assignedToName ??
                                         'Aguardando técnico',
                                   ),
                                   _DetailRow(
-                                      label: 'Aberto em',
-                                      value: formatDate(ticket.createdAt)),
+                                    label: 'Aberto em',
+                                    value: formatDate(ticket.createdAt),
+                                  ),
                                   if (ticket.resolvedAt != null)
                                     _DetailRow(
-                                        label: 'Concluído em',
-                                        value: formatDate(ticket.resolvedAt)),
+                                      label: 'Concluído em',
+                                      value: formatDate(ticket.resolvedAt),
+                                    ),
                                 ],
                               ),
                             ),
@@ -174,11 +275,11 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                             const SectionTitle('Histórico do chamado'),
                             if (ticket.history.isEmpty)
                               const EmptyState(
-                                  message: 'Nenhum histórico registrado.')
+                                message: 'Nenhum histórico registrado.',
+                              )
                             else
                               ...List.generate(ticket.history.length, (i) {
-                                final isLast =
-                                    i == ticket.history.length - 1;
+                                final isLast = i == ticket.history.length - 1;
                                 return _TimelineTile(
                                   event: ticket.history[i],
                                   isLast: isLast,
@@ -189,7 +290,7 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                       ),
                     ),
 
-                    if (showCloseButton)
+                    if (showCloseButton || canEdit)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -199,19 +300,35 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
                             top: BorderSide(color: AppColors.borderColor),
                           ),
                         ),
-                        child: SizedBox(
-                          height: 48,
-                          child: FilledButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    CloseTicketPage(ticket: ticket),
+                        child: Row(
+                          children: [
+                            if (canEdit)
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _editTicket(context, ticket),
+                                  icon: const Icon(Icons.edit_outlined),
+                                  label: const Text('Editar chamado'),
+                                ),
                               ),
-                            ),
-                            icon: const Icon(Icons.assignment_turned_in_outlined),
-                            label: const Text('Registrar Solução'),
-                          ),
+                            if (canEdit && showCloseButton)
+                              const SizedBox(width: 12),
+                            if (showCloseButton)
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          CloseTicketPage(ticket: ticket),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.assignment_turned_in_outlined,
+                                  ),
+                                  label: const Text('Registrar Solução'),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                   ],
@@ -237,9 +354,13 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.secondaryTextColor, fontSize: 13)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.secondaryTextColor,
+              fontSize: 13,
+            ),
+          ),
           const SizedBox(width: 12),
           Flexible(
             child: Text(
@@ -276,10 +397,7 @@ class _TimelineTile extends StatelessWidget {
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(
-                    width: 2,
-                    color: AppColors.borderColor,
-                  ),
+                  child: Container(width: 2, color: AppColors.borderColor),
                 ),
             ],
           ),
@@ -293,27 +411,39 @@ class _TimelineTile extends StatelessWidget {
                   Text(
                     TicketStatus.label(event.status),
                     style: TextStyle(
-                        fontWeight: FontWeight.bold, color: color, fontSize: 13),
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                      fontSize: 13,
+                    ),
                   ),
                   if (event.byName != null) ...[
                     const SizedBox(height: 2),
-                    Text('por ${event.byName}',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.secondaryTextColor)),
+                    Text(
+                      'por ${event.byName}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.secondaryTextColor,
+                      ),
+                    ),
                   ],
                   if (event.note != null && event.note!.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(event.note!,
-                        style: const TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: AppColors.secondaryTextColor)),
+                    Text(
+                      event.note!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.secondaryTextColor,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 2),
                   Text(
                     formatDate(event.at),
                     style: const TextStyle(
-                        fontSize: 11, color: AppColors.secondaryTextColor),
+                      fontSize: 11,
+                      color: AppColors.secondaryTextColor,
+                    ),
                   ),
                 ],
               ),
