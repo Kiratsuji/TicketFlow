@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
 import '../../models/ticketModel.dart';
 import '../../models/userModel.dart';
 import '../../services/ticketService.dart';
@@ -41,7 +42,9 @@ class TechHomePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DashboardHeader(
-                    username: username, roleLabel: UserRole.label(UserRole.tech)),
+                  username: username,
+                  roleLabel: UserRole.label(UserRole.tech),
+                ),
                 const SizedBox(height: 24),
 
                 // Cards de métricas: total na fila, meus atendimentos
@@ -66,11 +69,15 @@ class TechHomePage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: StreamBuilder<List<TicketModel>>(
-                        stream: TicketService().streamAssignedTo(companyId, uid),
+                        stream: TicketService().streamAssignedTo(
+                          companyId,
+                          uid,
+                        ),
                         builder: (context, snap) {
                           final tickets = snap.data ?? [];
-                          final inProgress =
-                              tickets.where((t) => t.isInProgress).length;
+                          final inProgress = tickets
+                              .where((t) => t.isInProgress)
+                              .length;
                           return StatCard(
                             title: 'Meus Atendimentos',
                             value: '$inProgress',
@@ -84,15 +91,29 @@ class TechHomePage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: StreamBuilder<List<TicketModel>>(
-                        stream: TicketService().streamResolvedBy(companyId, uid),
+                        stream: TicketService().streamResolvedBy(
+                          companyId,
+                          uid,
+                        ),
                         builder: (context, snap) {
                           final count = snap.data?.length ?? 0;
-                          return StatCard(
-                            title: 'Resolvidos',
-                            value: '$count',
-                            subtitle: 'Total',
-                            icon: Icons.check_circle_outline,
-                            color: AppColors.successColor,
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const OpenTicketsPage(
+                                  initialTab: TicketQueueTab.concluidos,
+                                ),
+                              ),
+                            ),
+                            child: StatCard(
+                              title: 'Resolvidos',
+                              value: '$count',
+                              subtitle: 'Total',
+                              icon: Icons.check_circle_outline,
+                              color: AppColors.successColor,
+                            ),
                           );
                         },
                       ),
@@ -108,13 +129,17 @@ class TechHomePage extends StatelessWidget {
                   children: [
                     const Text(
                       'Atendimentos Recentes',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const OpenTicketsPage()),
+                          builder: (_) => const OpenTicketsPage(),
+                        ),
                       ),
                       icon: const Icon(Icons.list_alt_rounded, size: 18),
                       label: const Text('Fila geral'),
@@ -132,7 +157,8 @@ class TechHomePage extends StatelessWidget {
                   builder: (context, snap) {
                     if (snap.hasError) {
                       return const EmptyState(
-                          message: 'Erro ao carregar chamados.');
+                        message: 'Erro ao carregar chamados.',
+                      );
                     }
                     if (!snap.hasData) {
                       return const Padding(
@@ -141,28 +167,33 @@ class TechHomePage extends StatelessWidget {
                       );
                     }
                     final tickets = List<TicketModel>.from(snap.data!)
-                      ..sort((a, b) => (_assumedAt(b) ?? DateTime(0))
-                          .compareTo(_assumedAt(a) ?? DateTime(0)));
+                      ..sort(
+                        (a, b) => (_assumedAt(b) ?? DateTime(0)).compareTo(
+                          _assumedAt(a) ?? DateTime(0),
+                        ),
+                      );
                     final recent = tickets.take(5).toList();
 
                     if (recent.isEmpty) {
                       return const EmptyState(
-                          message: 'Você ainda não assumiu nenhum chamado.');
+                        message: 'Você ainda não assumiu nenhum chamado.',
+                      );
                     }
                     return Column(
                       children: recent
-                          .map((t) => InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                TicketDetailPage(ticketId: t.id),
-                          ),
-                        ),
-                        child:
-                        TicketCard(ticket: t, showAuthor: true),
-                      ))
+                          .map(
+                            (t) => InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      TicketDetailPage(ticketId: t.id),
+                                ),
+                              ),
+                              child: TicketCard(ticket: t, showAuthor: true),
+                            ),
+                          )
                           .toList(),
                     );
                   },
